@@ -1,0 +1,79 @@
+import { Navbar } from './components/Navbar';
+import { Hero } from './components/Hero';
+import { StartSection } from './components/StartSection';
+import { FeaturesChess } from './components/FeaturesChess';
+import { FeaturesGrid } from './components/FeaturesGrid';
+import { HowItWorks } from './components/HowItWorks';
+import { TechStack } from './components/TechStack';
+import { Stats } from './components/Stats';
+import { Testimonials } from './components/Testimonials';
+import { CtaFooter } from './components/CtaFooter';
+import { BookingDialog } from './components/BookingDialog';
+import { PricingModal } from './components/PricingModal';
+import { TransitionOverlay } from './components/TransitionOverlay';
+import { AdminGate } from './components/AdminGate';
+import { AdminRequired } from './components/AdminRequired';
+import { ServicesApp } from './pages/ServicesApp';
+import { useState } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+
+import { AuthProvider } from './lib/auth';
+
+function LandingPage() {
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  const navigate = useNavigate();
+
+  const openBooking = () => setIsBookingOpen(true);
+  const openPricing = () => setIsPricingOpen(true);
+  const startTransition = () => setIsTransitioning(true);
+
+  const handleTransitionComplete = () => {
+    navigate('/services');
+  };
+
+  return (
+    <div className="bg-black text-white selection:bg-white/20">
+      <Navbar onOpenBooking={openBooking} onOpenPricing={openPricing} onOpenServices={startTransition} />
+      <main className="relative z-10 w-full overflow-x-hidden">
+        <Hero onOpenBooking={openBooking} />
+        <div className="bg-black relative">
+          <StartSection onOpenBooking={openBooking} />
+          <FeaturesChess onOpenBooking={openBooking} />
+          <FeaturesGrid onOpenPricing={openPricing} />
+          <HowItWorks />
+          <TechStack />
+          <Stats />
+          <Testimonials />
+          <CtaFooter onOpenBooking={openBooking} />
+        </div>
+      </main>
+      <BookingDialog isOpen={isBookingOpen} onClose={() => setIsBookingOpen(false)} />
+      <PricingModal isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)} />
+      <TransitionOverlay isVisible={isTransitioning} onComplete={handleTransitionComplete} />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/admin" element={<AdminGate />} />
+          <Route 
+            path="/services" 
+            element={
+              <AdminRequired>
+                <ServicesApp />
+              </AdminRequired>
+            } 
+          />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
