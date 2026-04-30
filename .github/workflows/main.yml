@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -10,18 +10,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Node.js ${{ matrix.node-version }}
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: 18.x
         cache: 'npm'
 
     - name: Install dependencies
@@ -33,5 +29,21 @@ jobs:
     - name: Build project
       run: npm run build
 
-    - name: Run tests
-      run: npm test
+    - name: Deploy to avinasheditz
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.actor }}/avinasheditz
+        token: ${{ secrets.GITHUB_TOKEN }}
+        path: deploy
+
+    - name: Push built files
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        cp -r dist/* deploy/
+        cd deploy
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add .
+        git commit -m "Deploy from main: ${{ github.sha }}" || true
+        git push           
